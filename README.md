@@ -8,3 +8,4 @@ It can be used to plot single corner plot or multiple corner plots overlaid on t
 Example usage:
 ```bash
 python ../nmma_extras/plot_all.py -f PChip12dp PChip16dp PChip4dp PChip12dp PChip16dp PChip4dp -p AT2017gfo_ind.prior -o multiple --ext pdf
+```
