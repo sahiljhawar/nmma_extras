@@ -1,7 +1,7 @@
 # Repository to add scripts, etc which I use in tandem with [NMMA](https://github.com/nuclear-multimessenger-astronomy/nmma)
 
 ## Corner plotting
-For 2D posterior plots, I use [corner.py](https://corner.readthedocs.io/en/latest/) to generate `sick` corner plots. I have modified the code to add a few features which I find useful. It is obvious that while plotting only the posteriors with source parameters can be compared.
+For 2D posterior plots, I use [corner.py](https://corner.readthedocs.io/en/latest/) to generate `sick` corner plots. I have modified the code to add a few features which I find useful. It is obvious that while plotting only the posteriors with same source parameters can be compared.
 
 It can be used to plot single corner plot or multiple corner plots overlaid on top of each other on a single figure. Have a look at different figures in the `examples` folder.
 
