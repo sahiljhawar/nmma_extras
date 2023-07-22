@@ -322,7 +322,6 @@ if __name__ == "__main__":
     else:
         truths = None
     labels = plotting_parameters(prior_filename)
-    folder_name = os.path.dirname(posterior_files[0])
     _filename = [file for file in posterior_files]
     name = "_VS_".join([j for j in _filename])
     if len(posterior_files) == 1:
