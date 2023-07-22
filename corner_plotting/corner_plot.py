@@ -39,6 +39,18 @@ plt.rcParams.update({"font.size": 22})
 
 
 def plotting_parameters(prior_filename):
+    """
+    Extract plotting parameters and latex representation from the given prior file.
+    Keys will be used as column names for the posterior samples and values will be used as axis labels.
+    Parameters
+    ----------
+    prior_filename : str
+        The file path of the prior file.
+    Returns
+    -------
+    dict
+        A dictionary containing the plotting parameters.
+    """
     parameters = {}
     with open(prior_filename, "r") as file:
         for line in file:
@@ -68,6 +80,19 @@ def plotting_parameters(prior_filename):
 
 
 def load_csv(filename_with_fullpath, prior_filename):
+    """
+    Load posterior samples from a CSV file.
+    Parameters
+    ----------
+    filename_with_fullpath : str
+        The file path of the posterior samples in CSV format.
+    prior_filename : str
+        The file path of the prior file to crossmatch the parameters and only load the (astrophysical) source parameters.
+    Returns
+    -------
+    numpy.ndarray
+        A 2D numpy array representing the posterior samples.
+    """
     df = pd.read_csv(
         filename_with_fullpath + "/injection_posterior_samples.dat", sep=" "
     )
@@ -78,6 +103,19 @@ def load_csv(filename_with_fullpath, prior_filename):
 
 
 def load_injection(prior_filename, injection_file_json):
+    """
+    Load injection data from a JSON file. (Not useful incase of real data)
+    Parameters
+    ----------
+    prior_filename : str
+        The file path of the prior file.
+    injection_file_json : str
+        The file path of the injection JSON file.
+    Returns
+    -------
+    numpy.ndarray
+        A 1D numpy array representing the injection data to be used as truths.
+    """
     df = pd.read_json(injection_file_json)
     df = df.from_records(df["injections"]["content"])
     columns = plotting_parameters(prior_filename).keys()
@@ -87,6 +125,28 @@ def load_injection(prior_filename, injection_file_json):
 
 
 def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
+    """
+    Generate a corner plot for one or multiple datasets.
+    Parameters
+    ----------
+    data : list of numpy.ndarray
+        A list of 2D numpy arrays representing multiple datasets.
+    labels : dict
+        A dictionary containing the labels for each dimension in the datasets. Comes from the plotting_parameters function.
+    filename : str
+        The file path for saving the corner plot image.
+    truths : numpy.ndarray or None
+        A 1D numpy array representing the truth values (optional).
+    legendlabel : list of str
+        A list of legend labels for each dataset.
+    ext : str
+        The output file extension for the image (e.g., "png", "pdf").
+    **kwargs
+        Additional keyword arguments for the corner plot.
+    Returns
+    -------
+    None
+    """
     cwd = os.getcwd()
     folder_name = "images/"
     check = os.path.dirname(cwd + "/" + folder_name)
@@ -120,7 +180,9 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
         max_n_ticks=3,
         # weights=np.ones(len(data[0])) / len(data[0]),
         hist_kwargs={"density": True, "zorder": len(data)},
-        contourf_kwargs={"zorder": len(data),},
+        contourf_kwargs={
+            "zorder": len(data),
+        },
         contour_kwargs={"zorder": len(data)},
         **kwargs,
     )
