@@ -30,12 +30,6 @@ params = {
     "ytick.minor.size": 3.0,
     # legend
     "legend.fontsize": 20,
-    "legend.frameon": False,
-    # 'legend.framealpha':1.0,
-    # colors
-    "image.cmap": "viridis",
-    # saving figures
-    "savefig.dpi": 300,
 }
 plt.rcParams.update(params)
 plt.rcParams["font.serif"] = ["Computer Modern"]
@@ -105,7 +99,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
         truth_values = None
     else:
         truth_values = truths[:, 0]
-    color_array = sns.color_palette("deep", n_colors=10, desat=1)
+    color_array = sns.color_palette("icefire", n_colors=len(data), desat=0.8)
     limits = (
         (32, 45),
         (30, 80),
