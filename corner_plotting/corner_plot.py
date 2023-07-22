@@ -159,7 +159,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
         truth_values = None
     else:
         truth_values = truths[:, 0]
-    color_array = sns.color_palette("icefire", n_colors=len(data), desat=0.8)
+    color_array = sns.color_palette("deep", n_colors=len(data), desat=0.8)
     limits = (
         (32, 45),
         (30, 80),
