@@ -122,10 +122,12 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
         show_titles=[True if len(data) == 1 else False][0],
         range=[0.99] * (data[0].shape[1]),
         bins=40,
-        smooth=0.7,
         color=color_array[0],
         max_n_ticks=3,
-        weights=np.ones(len(data[0])) / len(data[0]),
+        # weights=np.ones(len(data[0])) / len(data[0]),
+        hist_kwargs={"density": True, "zorder": len(data)},
+        contourf_kwargs={"zorder": len(data),},
+        contour_kwargs={"zorder": len(data)},
         **kwargs,
     )
     axes = fig.get_axes()
@@ -138,11 +140,13 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
             # range=limits,
             range=[0.999] * (data[i].shape[1]),
             bins=40,
-            smooth=0.7,
             max_n_ticks=3,
             fig=fig,
             color=color_array[i],
-            weights=np.ones(len(data[i])) / len(data[i]),
+            # weights=np.ones(len(data[i])) / len(data[i]),
+            hist_kwargs={"density": True, "zorder": len(data) - i},
+            contourf_kwargs={"zorder": len(data) - i},
+            contour_kwargs={"zorder": len(data) - i},
             **kwargs,
         )
     # Legend
@@ -278,5 +282,6 @@ if __name__ == "__main__":
         truth_color="black",
         label_kwargs={"fontsize": 14},
         levels=[0.16, 0.5, 0.84],
+        smooth=0.9,
     )
     corner_plot(posteriors, labels, output_filename, truths, legendlabel, ext, **kwargs)
