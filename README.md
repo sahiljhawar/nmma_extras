@@ -9,3 +9,6 @@ Example usage:
 ```bash
 python ../nmma_extras/plot_all.py -f PChip12dp PChip16dp PChip4dp PChip12dp PChip16dp PChip4dp -p AT2017gfo_ind.prior -o multiple --ext pdf
 ```
+
+### Note:
+The (1D) histograms are not normalised correctly in case multiple posteriors are bieng plotted. If you happen to use this script and figure out a way to scale the histrograms correctly, please open a PR.
