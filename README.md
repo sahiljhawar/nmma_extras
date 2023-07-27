@@ -11,4 +11,4 @@ python ../nmma_extras/plot_all.py -f PChip12dp PChip16dp PChip4dp PChip12dp PChi
 ```
 
 ### Note:
-The (1D) histograms are not normalised correctly in case multiple posteriors are bieng plotted. If you happen to use this script and figure out a way to scale the histrograms correctly, please open a PR.
+The (1D) histograms are not normalised correctly, sometimes the histograms move out of the axes (only in y axis). If you happen to use this script and figure out a way to scale the histrograms correctly, please open a PR.
