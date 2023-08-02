@@ -14,28 +14,22 @@ params = {
     # fonts
     "mathtext.fontset": "stix",
     # figure and axes
-    "figure.figsize": (14, 7),
-    "figure.titlesize": 35,
     "axes.grid": False,
     "axes.titlesize": 10,
-    "axes.labelsize": 40,
     # tick markers
     "xtick.direction": "in",
     "ytick.direction": "in",
-    "xtick.labelsize": 16,
-    "ytick.labelsize": 16,
+    "xtick.labelsize": 13,
+    "ytick.labelsize": 13,
     "xtick.major.size": 10.0,
     "ytick.major.size": 10.0,
-    "xtick.minor.size": 3.0,
-    "ytick.minor.size": 3.0,
     # legend
     "legend.fontsize": 20,
 }
 plt.rcParams.update(params)
 plt.rcParams["font.serif"] = ["Computer Modern"]
 plt.rcParams["font.family"] = ["serif", "STIXGeneral"]
-plt.rcParams["savefig.bbox"] = None
-plt.rcParams.update({"font.size": 22})
+plt.rcParams.update({"font.size": 16})
 
 
 def plotting_parameters(prior_filename):
@@ -102,9 +96,9 @@ def load_csv(filename_with_fullpath, prior_filename):
     return samples
 
 
-def load_injection(prior_filename, injection_file_json):
+def load_injection(prior_filename, injection_file_json, injection_num):
     """
-    Load injection data from a JSON file. (Not useful incase of real data)
+    Load injection data from a JSON file.
     Parameters
     ----------
     prior_filename : str
@@ -120,8 +114,29 @@ def load_injection(prior_filename, injection_file_json):
     df = df.from_records(df["injections"]["content"])
     columns = plotting_parameters(prior_filename).keys()
     df = df[[col for col in columns if col in df.columns]]
-    samples = np.vstack(df.values).flatten()
-    return samples
+    truths = np.vstack(df.iloc[injection_num].values).flatten()
+    return truths
+
+
+def load_bestfit(prior_filename, bestfit_file_json):
+    """
+    Load bestfit params from a JSON file.
+    Parameters
+    ----------
+    prior_filename : str
+        The file path of the prior file.
+    bestfit_file_json : str
+        The file path of the bestfit JSON file.
+    Returns
+    -------
+    numpy.ndarray
+        A 1D numpy array representing the bestfit params to be used as truths.
+    """
+    df = pd.read_json(bestfit_file_json, typ="series")
+    columns = plotting_parameters(prior_filename).keys()
+    df = df[[col for col in columns if col in df.keys()]]
+    truths = np.vstack(df.values).flatten()
+    return truths
 
 
 def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
@@ -158,16 +173,13 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
     if truths is None:
         truth_values = None
     else:
-        truth_values = truths[:, 0]
+        truth_values = truths
+
     color_array = sns.color_palette("deep", n_colors=len(data), desat=0.8)
-    limits = (
-        (32, 45),
-        (30, 80),
-        (0, np.pi / 2.0),
-        (-2.7, -2.2),
-        (-1.45, -1.15),
-        (0.48, 8),
-    )
+
+    # print(np.array([np.min(data[0],axis=0),np.max(data[0],axis=0)]).reshape(data[0].shape[1],2))
+    # fix this
+
     fig = corner.corner(
         data[0],
         labels=list(labels.values()),
@@ -176,9 +188,10 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
         show_titles=[True if len(data) == 1 else False][0],
         range=[0.99] * (data[0].shape[1]),
         bins=40,
+        truths=truth_values,
         color=color_array[0],
         max_n_ticks=3,
-        # weights=np.ones(len(data[0])) / len(data[0]),
+        weights=np.ones(len(data[0])) / len(data[0]),
         hist_kwargs={"density": True, "zorder": len(data)},
         contourf_kwargs={
             "zorder": len(data),
@@ -186,8 +199,8 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
         contour_kwargs={"zorder": len(data)},
         **kwargs,
     )
+
     axes = fig.get_axes()
-    plt.rcParams.update({"font.size": 14})
     for i in range(1, len(data)):
         fig = corner.corner(
             data[i],
@@ -199,7 +212,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
             max_n_ticks=3,
             fig=fig,
             color=color_array[i],
-            # weights=np.ones(len(data[i])) / len(data[i]),
+            weights=np.ones(len(data[i])) / len(data[i]),
             hist_kwargs={"density": True, "zorder": len(data) - i},
             contourf_kwargs={"zorder": len(data) - i},
             contour_kwargs={"zorder": len(data) - i},
@@ -239,7 +252,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
         for i in range(0, len(axes), np.sqrt(len(axes)).astype(int) + 1):
             coords = axes[i].title.get_position()
             axes[i].text(
-                x=coords[0],
+                x=coords[0] - 0.05,
                 y=1.05 * coords[1],
                 s=r"${{{0:.2f}}}_{{-{1:.2f}}}^{{+{2:.2f}}}$  ".format(
                     *title_quantiles_1[i // np.sqrt(len(axes)).astype(int)]
@@ -249,7 +262,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
                 transform=axes[i].transAxes,
             )
             axes[i].text(
-                x=coords[0],
+                x=coords[0] + 0.05,
                 y=1.05 * coords[1],
                 s=r"${{{0:.2f}}}_{{-{1:.2f}}}^{{+{2:.2f}}}$".format(
                     *title_quantiles_2[i // np.sqrt(len(axes)).astype(int)]
@@ -266,24 +279,40 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate corner plot")
     parser.add_argument(
         "-f",
-        "--posterior_files",
+        "--posterior-files",
         type=str,
         nargs="+",
         help="CSV file path for posteriors",
     )
     parser.add_argument(
-        "-p", "--prior_filename", type=str, help="Prior file path for axes labels"
+        "-p", "--prior-filename", type=str, help="Prior file path for axes labels"
     )
     parser.add_argument(
         "-l",
-        "--label_name",
+        "--label-name",
         type=str,
         nargs="+",
         help="Legend labels (if in latex, use '$label$') or else just use the posterior folder names",
     )
     parser.add_argument(
-        "-i", "--injection_json", type=str, help="Injection JSON file path"
+        "-i",
+        "--injection-json",
+        type=str,
+        help="Injection JSON file path to be used as truth values",
     )
+    parser.add_argument(
+        "-n",
+        "--injection-num",
+        type=int,
+        help="Injection number to be used as truth values, only used if injection JSON is provided; equivalent to simulation ID",
+    )
+
+    parser.add_argument(
+        "--bestfit-params",
+        type=str,
+        help="Use the values from the bestfit_params.json file to plot the truth on the corner plot; Either use injection JSON or bestfit_params.json, not both",
+    )
+
     parser.add_argument(
         "-e",
         "--ext",
@@ -305,6 +334,8 @@ if __name__ == "__main__":
     label_name = args.label_name
     ext = args.ext
     output = args.output
+    injection_num = args.injection_num
+    bestfit_json = args.bestfit_params
     # Generate legend labels from input file names
     legendlabel = []
     if label_name is not None:
@@ -317,10 +348,16 @@ if __name__ == "__main__":
     for file in posterior_files:
         posterior = load_csv(file, prior_filename)
         posteriors.append(posterior)
+
     if injection_json is not None:
-        truths = load_injection(prior_filename, injection_json)
+        truths = load_injection(prior_filename, injection_json, injection_num)
+    elif args.bestfit_params is not None:
+        truths = load_bestfit(prior_filename, bestfit_json)
     else:
         truths = None
+
+    print(f"\nTruths = {truths}\n")
+
     labels = plotting_parameters(prior_filename)
     _filename = [file for file in posterior_files]
     name = "_VS_".join([j for j in _filename])
@@ -335,7 +372,7 @@ if __name__ == "__main__":
         plot_contours=True,
         fill_contours=True,
         truth_color="black",
-        label_kwargs={"fontsize": 14},
+        label_kwargs={"fontsize": 16},
         levels=[0.16, 0.5, 0.84],
         smooth=0.9,
     )
