@@ -177,16 +177,17 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
 
     color_array = sns.color_palette("deep", n_colors=len(data), desat=0.8)
 
-    # print(np.array([np.min(data[0],axis=0),np.max(data[0],axis=0)]).reshape(data[0].shape[1],2))
-    # fix this
+    _limit = np.concatenate(data, axis=0)
+    limit = np.array([np.min(_limit, axis=0), np.max(_limit, axis=0)]).T
 
+    print(limit)
     fig = corner.corner(
         data[0],
         labels=list(labels.values()),
         quantiles=[0.16, 0.84],
         title_quantiles=[[0.16, 0.5, 0.84] if len(data) == 1 else None][0],
         show_titles=[True if len(data) == 1 else False][0],
-        range=[0.99] * (data[0].shape[1]),
+        range=limit,
         bins=40,
         truths=truth_values,
         color=color_array[0],
@@ -206,8 +207,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
             data[i],
             labels=list(labels.values()),
             quantiles=[0.16, 0.84],
-            # range=limits,
-            range=[0.999] * (data[i].shape[1]),
+            range=limit,
             bins=40,
             max_n_ticks=3,
             fig=fig,
@@ -236,7 +236,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
                 lw=2,
             )
         )
-    axes[2 * int(np.sqrt(len(axes))) - 2].legend(
+    axes[2 * int(np.sqrt(len(axes))) - 3].legend(
         lines, legendlabel, loc=3, frameon=True, fancybox=True
     )
     if len(data) == 2:
@@ -373,7 +373,7 @@ if __name__ == "__main__":
         fill_contours=True,
         truth_color="black",
         label_kwargs={"fontsize": 16},
-        levels=[0.16, 0.5, 0.84],
-        smooth=0.9,
+        levels=[0.05, 0.05, 0.95],
+        smooth=1.5,
     )
     corner_plot(posteriors, labels, output_filename, truths, legendlabel, ext, **kwargs)
