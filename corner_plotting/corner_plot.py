@@ -7,6 +7,10 @@ import os
 import seaborn as sns
 import matplotlib.patches as mpatches
 import re
+import matplotlib
+from ast import literal_eval
+
+matplotlib.use("Agg")
 
 params = {
     # latex
@@ -180,7 +184,6 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
     _limit = np.concatenate(data, axis=0)
     limit = np.array([np.min(_limit, axis=0), np.max(_limit, axis=0)]).T
 
-    print(limit)
     fig = corner.corner(
         data[0],
         labels=list(labels.values()),
@@ -271,6 +274,7 @@ def corner_plot(data, labels, filename, truths, legendlabel, ext, **kwargs):
                 color=color_array[1],
                 transform=axes[i].transAxes,
             )
+    plt.show()
     fig.savefig(filename, format=ext, bbox_inches="tight", dpi=300)
     print("Saved corner plot:", filename)
 
@@ -323,10 +327,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "-o",
         "--output",
-        default=None,
+        default=True,
         type=str,
         help="output file name. If not provided, will be concatenation of input file names",
     )
+    parser.add_argument(
+        "--kwargs",
+        default="{}",
+        type=str,
+        help="kwargs to be passed to corner.corner. Default: {}",
+    )
+
+    
     args = parser.parse_args()
     posterior_files = args.posterior_files
     prior_filename = args.prior_filename
@@ -336,6 +348,9 @@ if __name__ == "__main__":
     output = args.output
     injection_num = args.injection_num
     bestfit_json = args.bestfit_params
+    additional_kwargs = literal_eval(args.kwargs)
+    print("Running with the following additional kwargs:")
+    print(additional_kwargs)
     # Generate legend labels from input file names
     legendlabel = []
     if label_name is not None:
@@ -366,6 +381,10 @@ if __name__ == "__main__":
     else:
         output_prefix = "multi_" + (output if output is not None else name)
     output_filename = output_prefix + "." + ext
+
+
+
+
     kwargs = dict(
         plot_datapoints=False,
         plot_density=False,
@@ -373,7 +392,10 @@ if __name__ == "__main__":
         fill_contours=True,
         truth_color="black",
         label_kwargs={"fontsize": 16},
-        levels=[0.05, 0.05, 0.95],
-        smooth=1.5,
+        levels = [0.16,0.5,0.84],
+        smooth = 1
     )
+
+    kwargs.update(additional_kwargs)
+
     corner_plot(posteriors, labels, output_filename, truths, legendlabel, ext, **kwargs)
