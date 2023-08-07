@@ -91,9 +91,7 @@ def load_csv(filename_with_fullpath, prior_filename):
     numpy.ndarray
         A 2D numpy array representing the posterior samples.
     """
-    df = pd.read_csv(
-        filename_with_fullpath + "/injection_posterior_samples.dat", sep=" "
-    )
+    df = pd.read_csv(filename_with_fullpath, sep=" ")
     columns = plotting_parameters(prior_filename).keys()
     df = df[[col for col in columns if col in df.columns]]
     samples = np.vstack(df.values)
@@ -286,10 +284,15 @@ if __name__ == "__main__":
         "--posterior-files",
         type=str,
         nargs="+",
+        required=True,
         help="CSV file path for posteriors",
     )
     parser.add_argument(
-        "-p", "--prior-filename", type=str, help="Prior file path for axes labels"
+        "-p",
+        "--prior-filename",
+        type=str,
+        required=True,
+        help="Prior file path for axes labels",
     )
     parser.add_argument(
         "-l",
@@ -327,18 +330,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "-o",
         "--output",
-        default=True,
+        default=None,
+        required=True,
         type=str,
-        help="output file name. If not provided, will be concatenation of input file names",
+        help="output file name.",
     )
     parser.add_argument(
         "--kwargs",
         default="{}",
         type=str,
-        help="kwargs to be passed to corner.corner. Default: {}",
+        help="kwargs to be passed to corner.corner. Eg: {'plot_datapoints': False}, enclose {} in double quotes",
     )
 
-    
     args = parser.parse_args()
     posterior_files = args.posterior_files
     prior_filename = args.prior_filename
@@ -350,7 +353,8 @@ if __name__ == "__main__":
     bestfit_json = args.bestfit_params
     additional_kwargs = literal_eval(args.kwargs)
     print("Running with the following additional kwargs:")
-    print(additional_kwargs)
+    for key, value in additional_kwargs.items():
+        print(f"{key}: {value}")
     # Generate legend labels from input file names
     legendlabel = []
     if label_name is not None:
@@ -374,16 +378,7 @@ if __name__ == "__main__":
     print(f"\nTruths = {truths}\n")
 
     labels = plotting_parameters(prior_filename)
-    _filename = [file for file in posterior_files]
-    name = "_VS_".join([j for j in _filename])
-    if len(posterior_files) == 1:
-        output_prefix = output if output is not None else name
-    else:
-        output_prefix = "multi_" + (output if output is not None else name)
-    output_filename = output_prefix + "." + ext
-
-
-
+    output_filename = output + "." + ext
 
     kwargs = dict(
         plot_datapoints=False,
@@ -392,10 +387,14 @@ if __name__ == "__main__":
         fill_contours=True,
         truth_color="black",
         label_kwargs={"fontsize": 16},
-        levels = [0.16,0.5,0.84],
-        smooth = 1
+        levels=[0.16, 0.5, 0.84],
+        smooth=1,
     )
 
     kwargs.update(additional_kwargs)
 
     corner_plot(posteriors, labels, output_filename, truths, legendlabel, ext, **kwargs)
+
+
+## Example usage
+# python corner_plot.py -f GRB_res12_linear2dp/injection_posterior_samples.dat GRB_res12_linear4dp/injection_posterior_samples.dat -p GRB170817A_emsys_4dp.prior -o linear2d_vs_linear4dp --kwargs "{'levels':[0.05,0.5,0.95]}"
